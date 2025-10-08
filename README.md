@@ -22,23 +22,34 @@ pip install arc-superset-dialect
 superset run -h 0.0.0.0 -p 8088
 ```
 
-### Option 2: Custom Superset Docker Image
+### Option 2: Docker Image (Recommended for Production)
 
-Build a Superset image with Arc support:
+Use the included Dockerfile to build a Superset image with Arc pre-installed:
 
-```dockerfile
-FROM apache/superset:latest
-
-USER root
-RUN pip install arc-superset-dialect
-USER superset
-```
-
-Then deploy:
 ```bash
+# Clone the repository
+git clone https://github.com/basekick-labs/arc-superset-dialect.git
+cd arc-superset-dialect
+
+# Build the image
 docker build -t superset-arc:latest .
-docker run -d -p 8088:8088 superset-arc:latest
+
+# Run Superset with Arc support
+docker run -d \
+  -p 8088:8088 \
+  -v superset_home:/app/superset_home \
+  --name superset-arc \
+  superset-arc:latest
+
+# Check logs
+docker logs -f superset-arc
 ```
+
+The Dockerfile includes:
+- Arc dialect pre-installed
+- Custom Superset configuration
+- Automatic database initialization
+- Default admin user (admin/admin - **change in production!**)
 
 ### Connect to Arc
 
