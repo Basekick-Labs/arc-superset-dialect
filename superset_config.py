@@ -38,14 +38,21 @@ AUTH_TYPE = 1  # AUTH_DB = 1 for database authentication
 LOGGER_LEVEL = 'INFO'
 
 # Arc dialect registration
+# Manual registration required because SQLAlchemy doesn't always discover entry_points
+# in containerized environments
 try:
-    # Import and register Arc dialect (auto-registered via entry_points)
-    from arc_dialect import register_arc_dialect
-    register_arc_dialect()
+    import arc_dialect
+    from sqlalchemy.dialects import registry
+
+    # Register the dialect manually
+    registry.register("arc", "arc_dialect", "ArcDialect")
+    registry.register("arc.api", "arc_dialect", "ArcDialect")
+
     print("✅ Arc dialect registered successfully")
+except ImportError as e:
+    print(f"⚠️  Arc dialect import failed: {e}")
 except Exception as e:
-    print(f"⚠️  Arc dialect registration: {e}")
-    # Dialect may still work via SQLAlchemy entry_points
+    print(f"⚠️  Arc dialect registration warning: {e}")
 
 # Example connection string for Arc:
 # arc://YOUR_API_KEY@arc-api:8000/default

@@ -283,33 +283,20 @@ class ArcDialect(Dialect):
         """Create a connection to Arc API"""
         return ArcDBAPIConnection(api_base_url, api_key)
 
-    def get_schema_names(self, connection, **kwargs):
-        """Get available schemas (databases/prefixes in Arc)"""
+    def do_ping(self, dbapi_conn):
+        """Test the connection by executing a simple query"""
         try:
-            # Get the raw DBAPI connection
-            if hasattr(connection, 'connection'):
-                dbapi_conn = connection.connection
-            else:
-                dbapi_conn = connection
-
-            # Use SHOW TABLES to get all tables and extract unique databases
             cursor = dbapi_conn.cursor()
-            cursor.execute("SHOW TABLES")
+            cursor.execute("SELECT 1")
+            cursor.fetchall()
+            return True
+        except Exception:
+            return False
 
-            schemas = set()
-            schemas.add("default")  # Always include default
-
-            if cursor.description:
-                # SHOW TABLES returns: database, table_name, storage_path, file_count, total_size_mb
-                for row in cursor.fetchall():
-                    if len(row) >= 1 and row[0]:
-                        schemas.add(row[0])  # database is first column
-
-            return sorted(list(schemas))
-
-        except Exception as e:
-            logger.warning(f"Could not get schema names: {e}")
-            return ["default"]
+    def get_schema_names(self, connection, **kwargs):
+        """Get available schemas (Arc only has default schema)"""
+        # Arc doesn't have schemas - all tables are in the default namespace
+        return ["default"]
 
     def has_table(self, connection, table_name, schema=None):
         """Check if table exists (we'll try to query it)"""
@@ -334,7 +321,7 @@ class ArcDialect(Dialect):
             return False
 
     def get_table_names(self, connection, schema=None, **kwargs):
-        """Get available table names for a specific schema"""
+        """Get available table names"""
         # Accept and ignore additional kwargs like info_cache from SQLAlchemy
         try:
             # Get the raw DBAPI connection
@@ -347,21 +334,16 @@ class ArcDialect(Dialect):
 
             # Use SHOW TABLES to get actual table list
             cursor = dbapi_conn.cursor()
+            cursor.execute("SHOW TABLES")
 
-            # Handle schema parameter
-            if schema and schema != "default":
-                # Show tables from specific database/schema
-                cursor.execute(f"SHOW TABLES FROM {schema}")
-            else:
-                # Show all tables (default schema shows everything)
-                cursor.execute("SHOW TABLES")
-
-            tables = []
+            tables = set()
             if cursor.description:
                 # SHOW TABLES returns: database, table_name, storage_path, file_count, total_size_mb
+                # In Arc: database column contains the measurement name (cpu, mem, disk)
+                # table_name column contains the partition (2025, etc.) - we ignore this
                 for row in cursor.fetchall():
-                    if len(row) >= 2:
-                        tables.append(row[1])  # table_name is second column
+                    if len(row) >= 1 and row[0]:
+                        tables.add(row[0])  # First column is the measurement/table name
 
             if tables:
                 return tables
