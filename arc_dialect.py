@@ -294,9 +294,38 @@ class ArcDialect(Dialect):
             return False
 
     def get_schema_names(self, connection, **kwargs):
-        """Get available schemas (Arc only has default schema)"""
-        # Arc doesn't have schemas - all tables are in the default namespace
-        return ["default"]
+        """Get available schemas (databases in Arc)
+
+        Arc now supports multi-database architecture where each database
+        is exposed as a schema in Superset.
+        """
+        try:
+            # Get the raw DBAPI connection
+            if hasattr(connection, 'connection'):
+                dbapi_conn = connection.connection
+            else:
+                dbapi_conn = connection
+
+            # Use SHOW DATABASES to get all databases
+            cursor = dbapi_conn.cursor()
+            cursor.execute("SHOW DATABASES")
+
+            databases = []
+            if cursor.description:
+                for row in cursor.fetchall():
+                    if len(row) >= 1 and row[0]:
+                        databases.append(row[0])
+
+            logger.info(f"Found {len(databases)} databases: {databases}")
+
+            if databases:
+                return databases
+            else:
+                # Fallback to default if SHOW DATABASES returns nothing
+                return ["default"]
+        except Exception as e:
+            logger.warning(f"Could not get databases, using default: {e}")
+            return ["default"]
 
     def has_table(self, connection, table_name, schema=None):
         """Check if table exists (we'll try to query it)"""
@@ -321,7 +350,16 @@ class ArcDialect(Dialect):
             return False
 
     def get_table_names(self, connection, schema=None, **kwargs):
-        """Get available table names"""
+        """Get available table names for a specific database (schema)
+
+        Args:
+            connection: Database connection
+            schema: Database name (in Arc, databases are exposed as schemas)
+            **kwargs: Additional SQLAlchemy kwargs
+
+        Returns:
+            List of table names in the specified database
+        """
         # Accept and ignore additional kwargs like info_cache from SQLAlchemy
         try:
             # Get the raw DBAPI connection
@@ -333,35 +371,40 @@ class ArcDialect(Dialect):
                 dbapi_conn = connection
 
             # Use SHOW TABLES to get actual table list
+            # SHOW TABLES returns tables from the current database (scoped by backend)
+            # Schema parameter is not used in the query since Arc's backend
+            # already scopes operations to its database
             cursor = dbapi_conn.cursor()
+
+            # Note: SHOW TABLES returns data from the database configured in the backend
+            # The schema parameter would be used when Arc supports database switching
+            # For now, we show all tables and let the schema context be informational
             cursor.execute("SHOW TABLES")
 
             tables = set()
             if cursor.description:
                 # SHOW TABLES returns: database, table_name, storage_path, file_count, total_size_mb
-                # In Arc: database column contains the measurement name (cpu, mem, disk)
-                # table_name column contains the partition (2025, etc.) - we ignore this
+                # database column = database name (default, production, etc.)
+                # table_name column = measurement name (cpu, mem, disk)
                 for row in cursor.fetchall():
-                    if len(row) >= 1 and row[0]:
-                        tables.add(row[0])  # First column is the measurement/table name
+                    if len(row) >= 2:
+                        db_name = row[0]  # database
+                        table_name = row[1]  # measurement name
+
+                        # Filter by schema if specified
+                        if schema is None or db_name == schema:
+                            tables.add(table_name)
+
+            logger.info(f"Found {len(tables)} tables in schema '{schema}': {sorted(tables)}")
 
             if tables:
-                return tables
+                return sorted(tables)
             else:
-                # Fallback to default tables
-                return [
-                    "avro_system_metrics",
-                    "avro_application_metrics",
-                    "avro_business_metrics"
-                ]
+                logger.warning(f"No tables found in schema '{schema}'")
+                return []
         except Exception as e:
-            logger.warning(f"Could not get table names: {e}")
-            # Return default tables as fallback
-            return [
-                "avro_system_metrics",
-                "avro_application_metrics",
-                "avro_business_metrics"
-            ]
+            logger.warning(f"Could not get table names for schema '{schema}': {e}")
+            return []
 
     def get_columns(self, connection, table_name, schema=None, **kwargs):
         """Get column information for a table"""

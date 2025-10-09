@@ -92,9 +92,65 @@ print(f'Token: {token}')
 
 Save the returned token - it's only shown once!
 
+## Multi-Database Support
+
+Arc supports multiple databases (namespaces) within a single instance. In Superset, databases are exposed as **schemas**:
+
+### Database Structure
+```
+Schema: default
+  ├── cpu (CPU metrics)
+  ├── mem (Memory metrics)
+  └── disk (Disk metrics)
+
+Schema: production
+  ├── cpu
+  ├── mem
+  └── disk
+
+Schema: staging
+  ├── cpu
+  ├── mem
+  └── disk
+```
+
+### Using Databases in Superset
+
+1. **View All Databases (Schemas)**:
+   - When creating a dataset, select the schema (database) from the dropdown
+   - Each database appears as a separate schema in Superset
+
+2. **Query Specific Database**:
+   ```sql
+   -- Query default database
+   SELECT * FROM cpu WHERE timestamp > NOW() - INTERVAL 1 HOUR
+
+   -- Query specific database
+   SELECT * FROM production.cpu WHERE timestamp > NOW() - INTERVAL 1 HOUR
+
+   -- Cross-database joins
+   SELECT
+       p.timestamp,
+       p.usage_idle as prod_cpu,
+       s.usage_idle as staging_cpu
+   FROM production.cpu p
+   JOIN staging.cpu s ON p.timestamp = s.timestamp
+   WHERE p.timestamp > NOW() - INTERVAL 1 HOUR
+   ```
+
+### Available Commands
+
+```sql
+-- List all databases
+SHOW DATABASES;
+
+-- List all tables in current database
+SHOW TABLES;
+```
+
 ## Available Tables
 
-The dialect auto-discovers all tables in your Arc data warehouse using `SHOW TABLES`. Common examples:
+The dialect auto-discovers all tables using `SHOW TABLES`. Common examples:
 
 - `cpu` - CPU metrics
 - `mem` - Memory metrics

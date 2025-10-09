@@ -8,10 +8,10 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="arc-superset-dialect",
-    version="1.0.3",
+    version="1.1.0",
     author="Arc Core Team",
     author_email="support@basekick.net",
-    description="SQLAlchemy dialect for Arc time-series database integration with Apache Superset",
+    description="SQLAlchemy dialect for Arc time-series database with multi-database support for Apache Superset",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/basekick-labs/arc-superset-dialect",
