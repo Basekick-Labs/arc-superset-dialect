@@ -362,31 +362,40 @@ class ArcDialect(Dialect):
         """
         # Accept and ignore additional kwargs like info_cache from SQLAlchemy
         try:
+            logger.info(f"get_table_names called with schema='{schema}', connection type={type(connection)}")
+
             # Get the raw DBAPI connection
             if hasattr(connection, 'connection'):
                 # SQLAlchemy Connection object
                 dbapi_conn = connection.connection
+                logger.info(f"Using connection.connection (DBAPI): {type(dbapi_conn)}")
             else:
                 # Already a DBAPI connection
                 dbapi_conn = connection
+                logger.info(f"Using connection directly (DBAPI): {type(dbapi_conn)}")
 
             # Use SHOW TABLES to get actual table list
-            # SHOW TABLES returns tables from the current database (scoped by backend)
-            # Schema parameter is not used in the query since Arc's backend
-            # already scopes operations to its database
             cursor = dbapi_conn.cursor()
 
-            # Note: SHOW TABLES returns data from the database configured in the backend
-            # The schema parameter would be used when Arc supports database switching
-            # For now, we show all tables and let the schema context be informational
-            cursor.execute("SHOW TABLES")
+            # If schema is specified, query that specific database
+            if schema:
+                sql = f"SHOW TABLES FROM {schema}"
+                logger.info(f"Executing: {sql}")
+                cursor.execute(sql)
+            else:
+                sql = "SHOW TABLES"
+                logger.info(f"Executing: {sql}")
+                cursor.execute(sql)
 
             tables = set()
             if cursor.description:
                 # SHOW TABLES returns: database, table_name, storage_path, file_count, total_size_mb
                 # database column = database name (default, production, etc.)
                 # table_name column = measurement name (cpu, mem, disk)
-                for row in cursor.fetchall():
+                rows = cursor.fetchall()
+                logger.info(f"SHOW TABLES returned {len(rows)} rows")
+                for row in rows:
+                    logger.info(f"Row: {row}")
                     if len(row) >= 2:
                         db_name = row[0]  # database
                         table_name = row[1]  # measurement name
@@ -394,6 +403,7 @@ class ArcDialect(Dialect):
                         # Filter by schema if specified
                         if schema is None or db_name == schema:
                             tables.add(table_name)
+                            logger.info(f"Added table: {table_name} from database: {db_name}")
 
             logger.info(f"Found {len(tables)} tables in schema '{schema}': {sorted(tables)}")
 
@@ -403,7 +413,7 @@ class ArcDialect(Dialect):
                 logger.warning(f"No tables found in schema '{schema}'")
                 return []
         except Exception as e:
-            logger.warning(f"Could not get table names for schema '{schema}': {e}")
+            logger.error(f"Could not get table names for schema '{schema}': {e}", exc_info=True)
             return []
 
     def get_columns(self, connection, table_name, schema=None, **kwargs):

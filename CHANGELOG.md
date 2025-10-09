@@ -5,6 +5,18 @@ All notable changes to the Arc Superset Dialect will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2025-10-08
+
+### Fixed
+- **Critical**: `get_table_names()` now correctly uses `SHOW TABLES FROM {schema}` when querying specific databases
+  - Previously, schema parameter was ignored and only showed tables from the default database
+  - Now properly queries the specified database (e.g., `benchmark`, `production`) when user selects a schema in Superset
+  - Fixes issue where selecting a non-default schema would show empty table list
+
+### Changed
+- Removed outdated comments about schema parameter not being used
+- Cleaned up `get_table_names()` implementation for clarity
+
 ## [1.1.0] - 2025-10-08
 
 ### Added
