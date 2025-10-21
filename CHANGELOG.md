@@ -5,6 +5,16 @@ All notable changes to the Arc Superset Dialect will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] - 2024-10-21
+
+### Changed
+- BREAKING: Updated query endpoint from `/query` to `/api/v1/query` for Arc v1.0.0 compatibility
+- Requires Arc Core v1.0.0 or later
+- Backwards incompatible with Arc Core < v1.0.0
+
+### Migration
+- Upgrade Arc Core to v1.0.0 or later before upgrading this dialect
+
 ## [1.2.0] - 2025-10-08
 
 ### Fixed
