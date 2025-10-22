@@ -8,7 +8,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="arc-superset-dialect",
-    version="1.3.0",
+    version="1.3.1",
     author="Arc Core Team",
     author_email="support@basekick.net",
     description="SQLAlchemy dialect for Arc time-series database with multi-database support for Apache Superset",
@@ -31,7 +31,7 @@ setup(
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",
     ],
-    py_modules=["arc_dialect"],
+    py_modules=["arc_dialect_json"],
     python_requires=">=3.8",
     install_requires=[
         "SQLAlchemy>=1.4.0,<3.0.0",
@@ -39,8 +39,7 @@ setup(
     ],
     entry_points={
         "sqlalchemy.dialects": [
-            "arc = arc_dialect:ArcDialect",
-            "arc.api = arc_dialect:ArcDialect",
+            "arc.json = arc_dialect_json:ArcDialect",
         ]
     },
     keywords="arc superset sqlalchemy dialect timeseries database",

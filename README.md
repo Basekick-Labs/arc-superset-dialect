@@ -61,7 +61,7 @@ The Dockerfile includes:
    - Select **Other** as database type
    - Use this connection string:
      ```
-     arc://YOUR_API_KEY@arc-api:8000/default
+     arc.json://YOUR_API_KEY@arc-api:8000/default
      ```
 
 3. **Replace `YOUR_API_KEY`** with your Arc token (see below)
@@ -253,19 +253,19 @@ Dashboard    SQL Query      API Key Auth  Query    Columnar    Compacted    Obje
 ## Connection String Format
 
 ```
-arc://API_KEY@HOST:PORT/DATABASE
+arc.json://API_KEY@HOST:PORT/DATABASE
 ```
 
 **Examples:**
 ```
 # Local development
-arc://your-api-key@localhost:8000/default
+arc.json://your-api-key@localhost:8000/default
 
 # Docker Compose
-arc://your-api-key@arc-api:8000/default
+arc.json://your-api-key@arc-api:8000/default
 
 # Remote server
-arc://your-api-key@arc.example.com:8000/default
+arc.json://your-api-key@arc.example.com:8000/default
 ```
 
 ## Troubleshooting
