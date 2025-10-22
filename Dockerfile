@@ -1,24 +1,18 @@
-# Superset with Arc dialect pre-installed
+# Superset with Arc JSON dialect pre-installed
 FROM apache/superset:latest
 
 USER root
 
-# Install Arc dialect
-# PyPI installation goes to system Python, not the venv, so we copy directly
-COPY arc_dialect.py /app/.venv/lib/python3.10/site-packages/arc_dialect.py
-RUN pip install --no-cache-dir "SQLAlchemy>=1.4.0,<3.0.0" "requests>=2.31.0"
-
-# Alternative: Install from PyPI (but goes to system Python, not venv):
-# RUN pip install --no-cache-dir arc-superset-dialect>=1.0.2
-
-# Copy custom Superset configuration
-COPY superset_config.py /app/superset_config.py
-ENV SUPERSET_CONFIG_PATH=/app/superset_config.py
-
-# Copy entrypoint script
-COPY entrypoint.sh /app/entrypoint.sh
-RUN chmod +x /app/entrypoint.sh
+# Fix venv permissions so superset user can install packages
+RUN chown -R superset:superset /app/.venv
 
 USER superset
 
-ENTRYPOINT ["/app/entrypoint.sh"]
+# Install pip into the venv
+RUN /app/.venv/bin/python -m ensurepip --upgrade
+
+# Install Arc Superset JSON dialect into the venv
+RUN /app/.venv/bin/python -m pip install --no-cache-dir arc-superset-dialect
+
+# Use Superset's default initialization
+CMD ["/app/docker/docker-bootstrap.sh", "app-gunicorn"]

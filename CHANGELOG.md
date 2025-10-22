@@ -5,19 +5,39 @@ All notable changes to the Arc Superset Dialect will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.3] - 2024-10-22
+
+### Fixed
+- **Critical**: Changed driver from `api` to `json` for proper SQLAlchemy connection string format
+  - Connection string now uses `arc+json://` instead of `arc.json://`
+  - Follows SQLAlchemy `backend+driver://` convention
+  - Matches the Arrow dialect pattern (`arc+arrow://`)
+
+### Changed
+- Driver name: `api` → `json`
+- Connection string format: `arc.json://...` → `arc+json://...`
+- Updated all documentation to reflect new connection string format
+
+## [1.3.2] - 2024-10-22
+
+### Fixed
+- Documentation updates for connection string format
+
 ## [1.3.1] - 2024-10-22
 
 ### Fixed
 - **Critical**: Fixed module name conflict with arc-superset-arrow
   - Renamed module from `arc_dialect` to `arc_dialect_json` to avoid file conflicts
-  - Changed entry point from `arc` to `arc.json` for unique registration
-  - Connection string is now: `arc.json://user@host:port/database`
+  - Changed driver name from `api` to `json` for proper SQLAlchemy registration
+  - Connection string format: `arc+json://...` (follows SQLAlchemy `backend+driver` convention)
   - Fixes SQLAlchemy "Can't load plugin" error when both dialects are installed
+  - Fixes Superset validation error "Invalid connection string"
 
 ### Changed
 - Module name: `arc_dialect.py` → `arc_dialect_json.py`
-- SQLAlchemy dialect name: `arc` → `arc.json`
-- Removed redundant `arc.api` entry point
+- Driver name: `api` → `json`
+- Connection string format: `arc://...` → `arc+json://...`
+- Entry point: `arc` → `arc.json`
 
 ## [1.3.0] - 2024-10-21
 

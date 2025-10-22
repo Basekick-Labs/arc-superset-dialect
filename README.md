@@ -24,32 +24,27 @@ superset run -h 0.0.0.0 -p 8088
 
 ### Option 2: Docker Image (Recommended for Production)
 
-Use the included Dockerfile to build a Superset image with Arc pre-installed:
+Use the included Dockerfile to build a Superset image with Arc JSON dialect pre-installed:
 
 ```bash
-# Clone the repository
-git clone https://github.com/basekick-labs/arc-superset-dialect.git
-cd arc-superset-dialect
-
 # Build the image
-docker build -t superset-arc:latest .
+docker build -t superset-arc-json:latest .
 
-# Run Superset with Arc support
+# Run Superset with Arc JSON support
 docker run -d \
   -p 8088:8088 \
   -v superset_home:/app/superset_home \
   --name superset-arc \
-  superset-arc:latest
+  superset-arc-json:latest
 
 # Check logs
 docker logs -f superset-arc
 ```
 
 The Dockerfile includes:
-- Arc dialect pre-installed
-- Custom Superset configuration
-- Automatic database initialization
-- Default admin user (admin/admin - **change in production!**)
+- Arc JSON dialect pre-installed in Superset's venv
+- Pip properly configured in the virtual environment
+- Uses Superset's default initialization
 
 ### Connect to Arc
 
@@ -61,7 +56,7 @@ The Dockerfile includes:
    - Select **Other** as database type
    - Use this connection string:
      ```
-     arc.json://YOUR_API_KEY@arc-api:8000/default
+     arc+json://YOUR_API_KEY@arc-api:8000/default
      ```
 
 3. **Replace `YOUR_API_KEY`** with your Arc token (see below)
@@ -253,19 +248,19 @@ Dashboard    SQL Query      API Key Auth  Query    Columnar    Compacted    Obje
 ## Connection String Format
 
 ```
-arc.json://API_KEY@HOST:PORT/DATABASE
+arc+json://API_KEY@HOST:PORT/DATABASE
 ```
 
 **Examples:**
 ```
 # Local development
-arc.json://your-api-key@localhost:8000/default
+arc+json://your-api-key@localhost:8000/default
 
 # Docker Compose
-arc.json://your-api-key@arc-api:8000/default
+arc+json://your-api-key@arc-api:8000/default
 
 # Remote server
-arc.json://your-api-key@arc.example.com:8000/default
+arc+json://your-api-key@arc.example.com:8000/default
 ```
 
 ## Troubleshooting
