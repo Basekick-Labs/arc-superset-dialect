@@ -263,6 +263,12 @@ arc+json://your-api-key@arc-api:8000/default
 arc+json://your-api-key@arc.example.com:8000/default
 ```
 
+The `DATABASE` path component selects the Arc database for every query through the
+`X-Arc-Database` request header. For example, `/analytics` targets the `analytics`
+database. If the path is omitted, the dialect does not send this header and Arc
+uses its configured default database. URL-encoded database names are decoded by
+SQLAlchemy before the header is set.
+
 ## Troubleshooting
 
 ### Connection Issues
